@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val db = AppDatabase.get(applicationContext)
         val taskRepo = TaskRepository(db.taskDao())
-        val paperRepo = PaperRepository(db.paperDao(), PaperFetcher())
+        val paperRepo = PaperRepository(db.paperDao(), PaperFetcher)
         val llmStore = LlmConfigStore(applicationContext)
         val vm = PapersViewModel(paperRepo, llmStore)
         val prefs = getSharedPreferences("app_lock", MODE_PRIVATE)
