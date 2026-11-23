@@ -78,7 +78,7 @@ object PaperFetcher {
                 }
             } ?: ""
             val year: Int = it.optJSONObject("published")
-                ?.optJSONObject("date-parts")?.optJSONArray("0".toInt())?.optInt(0, 0) ?: 0
+                ?.optJSONObject("date-parts")?.optJSONArray("0")?.optInt(0, 0) ?: 0
             val doi: String = it.optString("DOI", "")
             val journalArr: JSONArray? = it.optJSONArray("container-title")
             val journal = journalArr?.optString(0, "") ?: ""
