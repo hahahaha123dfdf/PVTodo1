@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 class DailyPaperWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {
     override suspend fun doWork(): Result {
         val db = AppDatabase.get(applicationContext)
-        val repo = PaperRepository(db.paperDao(), PaperFetcher())
+        val repo = PaperRepository(db.paperDao(), PaperFetcher)
         return try {
             val fresh = repo.refresh()
             if (fresh.isNotEmpty() && NotificationHelper.canNotify(applicationContext)) {
