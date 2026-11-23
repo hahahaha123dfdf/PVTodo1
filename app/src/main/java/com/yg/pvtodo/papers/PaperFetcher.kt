@@ -6,7 +6,6 @@ import java.net.URL
 import java.net.URLEncoder
 
 object PaperFetcher {
-    // 内置 SCI Q1 期刊白名单(近似判定,可自行增删)
     private val Q1_JOURNALS = listOf(
         "applied energy", "ieee transactions on smart grid", "renewable energy",
         "energy conversion and management", "ieee transactions on power systems",
@@ -42,11 +41,12 @@ object PaperFetcher {
             val title = strip(e.substringAfter("<title>").substringBefore("</title>"))
             val link = e.substringAfter("<id>").substringBefore("</id>").trim()
             if (title.isEmpty() || link.isEmpty()) return@mapNotNull null
+            val authors = Regex("<name>([^<]+)</name>").findAll(e)
+                .map { it.groupValues[1] }
+                .joinToString(", ")
             Paper(
                 title = title,
-                authors = Regex("<name>([^<]+)</name>").matcher(e).let { m ->
-                    buildString { while (m.find()) { if (isNotEmpty()) append(", "); append(m.group(1)) } }
-                },
+                authors = authors,
                 abstract = strip(e.substringAfter("<summary>").substringBefore("</summary>")),
                 published = e.substringAfter("<published>").substringBefore("</published>").take(10),
                 doi = null, link = link, source = "arXiv", journal = null, tier = Paper.Tier.PREPRINT
@@ -65,16 +65,18 @@ object PaperFetcher {
                 if (title.isEmpty()) return@mapNotNull null
                 val authors = if (it.has("author")) it.getJSONArray("author").let { a ->
                     (0 until a.length()).joinToString(", ") { k ->
-                        a.getJSONObject(k).optString("family") + " " + a.getJSONObject(k).optString("given")
+                        val o = a.getJSONObject(k)
+                        (o.optString("family") + " " + o.optString("given")).trim()
                     }
                 } else ""
                 val year = it.getJSONObject("published").getJSONObject("date-parts").getJSONArray(0).optInt(0)
+                val doi = it.optString("DOI", "")
                 Paper(
                     title = title, authors = authors,
                     abstract = it.optString("abstract", "").replace(Regex("<[^>]*>"), "").trim(),
-                    published = year.toString(), doi = it.optString("DOI", null),
-                    link = "https://doi.org/" + it.optString("DOI", ""), source = "Crossref",
-                    journal = it.getJSONObject("container-title").optString(0, null)
+                    published = year.toString(), doi = doi.ifEmpty { null },
+                    link = "https://doi.org/" + doi, source = "Crossref",
+                    journal = it.getJSONObject("container-title").optString(0, "")
                 )
             }
         }
