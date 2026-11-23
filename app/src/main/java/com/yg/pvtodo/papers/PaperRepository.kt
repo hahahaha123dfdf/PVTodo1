@@ -8,6 +8,7 @@ class PaperRepository(private val dao: PaperDao, private val fetcher: PaperFetch
     fun observeAll(): Flow<List<PaperEntity>> = dao.observeAll()
     suspend fun hasAny(): Boolean = dao.count() > 0
     suspend fun refresh(): List<Paper> = withContext(Dispatchers.IO) {
+        dao.clearUnfav()
         val fresh = fetcher.fetchAll()
         val known = dao.allDois().toSet()
         val entities = fresh.map { p ->
